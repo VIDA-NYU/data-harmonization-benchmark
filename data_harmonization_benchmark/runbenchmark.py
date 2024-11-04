@@ -3,7 +3,6 @@ import logging
 import os
 
 import pandas as pd
-
 from config import Config
 from matching import matching
 from utils.result_proc import parse_results

@@ -1,13 +1,15 @@
-import os
 import logging
-from typing import Any, Dict, Optional
+import os
+from typing import Any, Dict, Optional, Tuple, Union
 
 import pandas as pd
 from unicorn_zero import TrainApp
+from valentine.algorithms.matcher_results import MatcherResults
 
 logger = logging.getLogger(__name__)
 
 ABS_PATH = os.path.dirname(os.path.abspath(__file__))
+
 
 def matching(
     usecase: str,
@@ -25,7 +27,7 @@ def matching(
         ckpt="UnicornPlus",
         valentine_output=True,
     ),
-):
+) -> Union[MatcherResults, Dict[Tuple[Tuple[str, str], Tuple[str, str]], float]]:
     data_dir = usecase_path
     data_name = usecase
     src_orig_file = source

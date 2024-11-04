@@ -1,20 +1,32 @@
+from typing import Dict, List, Tuple
 
-import torch
-from transformers import AutoTokenizer, AutoModel
 import numpy as np
+import torch
+from fuzzywuzzy import fuzz
 from scipy.spatial.distance import cosine
 from sentence_transformers import SentenceTransformer
-from typing import List, Tuple, Dict
-from .utils import preprocess_string, common_prefix, clean_column_name, remove_invalid_characters, get_samples, detect_column_type
-from .embedding_utils import compute_cosine_similarity, compute_cosine_similarity_simple
+from transformers import AutoModel, AutoTokenizer
 
-from fuzzywuzzy import fuzz
+from .embedding_utils import compute_cosine_similarity, compute_cosine_similarity_simple
+from .utils import (
+    clean_column_name,
+    common_prefix,
+    detect_column_type,
+    get_samples,
+    preprocess_string,
+    remove_invalid_characters,
+)
 
 
 class SimilarityRanker:
-    def __init__(self, topk=20, embedding_threshold=0.65, alignment_threshold=0.95, fuzzy_similarity_threshold=0.4):
-
-        self.model_name = 'sentence-transformers/all-mpnet-base-v2'
+    def __init__(
+        self,
+        topk=20,
+        embedding_threshold=0.65,
+        alignment_threshold=0.95,
+        fuzzy_similarity_threshold=0.4,
+    ):
+        self.model_name = "sentence-transformers/all-mpnet-base-v2"
         print(f"Loading model {self.model_name}")
         self.tokenizer = AutoTokenizer.from_pretrained(self.model_name)
         self.model = AutoModel.from_pretrained(self.model_name)
@@ -26,7 +38,9 @@ class SimilarityRanker:
         self.alignment_threshold = alignment_threshold
         self.fuzzy_similarity_threshold = fuzzy_similarity_threshold
 
-    def alignment_score_consecutive(self, str1, str2, max_distance=2, size_ratio_threshold=2):
+    def alignment_score_consecutive(
+        self, str1, str2, max_distance=2, size_ratio_threshold=2
+    ):
         s1 = str1
         s2 = str2
         # Preprocess strings (assuming this function exists)
@@ -69,7 +83,6 @@ class SimilarityRanker:
         return fuzz.ratio(s1, s2) / 100.0  # Normalize the score to a range [0, 1]
 
     def get_str_similarity_candidates(self, source_column_names, target_column_names):
-
         prefix_source = common_prefix(list(source_column_names))
         prefix_target = common_prefix(list(target_column_names))
 
@@ -81,13 +94,15 @@ class SimilarityRanker:
                 prep_target_col = target_col.replace(prefix_target, "")
 
                 alignment_score = self.alignment_score_consecutive(
-                    prep_source_col, prep_target_col)
+                    prep_source_col, prep_target_col
+                )
 
                 if alignment_score >= self.alignment_threshold:
                     candidates[(source_col, target_col)] = alignment_score
 
                 name_similarity = self.fuzzy_similarity(
-                    prep_source_col, prep_target_col)
+                    prep_source_col, prep_target_col
+                )
 
                 if name_similarity >= self.fuzzy_similarity_threshold:
                     candidates[(source_col, target_col)] = name_similarity
@@ -97,28 +112,31 @@ class SimilarityRanker:
     def _get_embeddings(self, texts, batch_size=32):
         embeddings = []
         for i in range(0, len(texts), batch_size):
-            batch_texts = texts[i:i+batch_size]
-            inputs = self.tokenizer(batch_texts, padding=True,
-                                    truncation=True, return_tensors="pt")
+            batch_texts = texts[i : i + batch_size]
+            inputs = self.tokenizer(
+                batch_texts, padding=True, truncation=True, return_tensors="pt"
+            )
             with torch.no_grad():
                 outputs = self.model(**inputs)
             embeddings.append(outputs.last_hidden_state.mean(dim=1))
         return torch.cat(embeddings)
 
     def encode(self, df, col):
-        #header = clean_column_name(col)
+        # header = clean_column_name(col)
         header = col
         data_type = detect_column_type(df[col])
         tokens = get_samples(df[col])
 
-
         text = (
             self.tokenizer.cls_token
-            + "Column: " + header
+            + "Column: "
+            + header
             + self.tokenizer.sep_token
-            + "Type: " + data_type
+            + "Type: "
+            + data_type
             + self.tokenizer.sep_token
-            + "Values: " + self.tokenizer.sep_token.join(tokens)
+            + "Values: "
+            + self.tokenizer.sep_token.join(tokens)
             + self.tokenizer.sep_token
             + self.tokenizer.eos_token  # End-of-sequence token
         )
@@ -128,7 +146,6 @@ class SimilarityRanker:
         return text
 
     def get_embedding_similarity_candidates(self, source_df, target_df):
-
         # source_column_names = source_df.columns
         # target_column_names = target_df.columns
 
@@ -137,10 +154,12 @@ class SimilarityRanker:
         # target_colnames_dict = {clean_column_name(
         #     col): col for col in target_column_names}
 
-        input_colnames_dict = {self.encode(source_df,
-                                           col): col for col in source_df.columns}
-        target_colnames_dict = {self.encode(target_df,
-                                            col): col for col in target_df.columns}
+        input_colnames_dict = {
+            self.encode(source_df, col): col for col in source_df.columns
+        }
+        target_colnames_dict = {
+            self.encode(target_df, col): col for col in target_df.columns
+        }
 
         # print(input_colnames_dict)
         # print(target_colnames_dict)
@@ -153,7 +172,8 @@ class SimilarityRanker:
 
         top_k = min(self.topk, len(cleaned_target_colnames))
         topk_similarity, topk_indices = compute_cosine_similarity_simple(
-            embeddings_input, embeddings_target, top_k)
+            embeddings_input, embeddings_target, top_k
+        )
 
         candidates = {}
         # avg_similarity = 0
@@ -171,9 +191,8 @@ class SimilarityRanker:
                 if similarity >= self.embedding_threshold:
                     # print(original_input_col, original_target_col, similarity)
 
-                    candidates[(original_input_col,
-                                original_target_col)] = similarity
-            
+                    candidates[(original_input_col, original_target_col)] = similarity
+
         # avg_similarity /= len(cleaned_input_colnames) * top_k
 
         # print(f"Average similarity: {avg_similarity}")

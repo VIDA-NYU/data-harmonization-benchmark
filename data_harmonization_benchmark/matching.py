@@ -4,12 +4,11 @@ import logging
 import os
 import sys
 import time
-from typing import Any, Tuple, Union
-
-from valentine.algorithms.matcher_results import MatcherResults
+from typing import Any, Dict, Tuple
 
 from config import Config
 from utils.mrr import compute_mean_ranking_reciprocal
+from valentine.algorithms.matcher_results import MatcherResults
 
 logger = logging.getLogger(__name__)
 ABS_PATH = os.path.dirname(os.path.abspath(__file__))
@@ -38,13 +37,17 @@ def get_matcher(matcher_name: str):
     return matcher
 
 
-def parse_matches_to_valentine(matches):
+def parse_matches_to_valentine(
+    matches: Dict[Tuple[Tuple[str, str], Tuple[str, str]], float]
+) -> MatcherResults:
     if isinstance(matches, MatcherResults):
         return matches
     return MatcherResults(matches)
 
 
-def save_json_results(results, file_path):
+def save_json_results(
+    results: Dict[Tuple[Tuple[str, str], Tuple[str, str]], float], file_path: str
+):
     save_file = os.path.join(OUTPUT_PATH, file_path)
     with open(save_file, "w", encoding="utf-8") as f:
         result_parsed = {}
@@ -53,7 +56,7 @@ def save_json_results(results, file_path):
         json.dump(result_parsed, f, ensure_ascii=False, indent=4)
 
 
-def matching(config: Config, matcher_name: str) -> Tuple[str, Any, int]:
+def matching(config: Config, matcher_name: str) -> Tuple[str, Dict[str, Any], int]:
     for subtask_id, subtask_name in enumerate(config.get_subtasks()):
         scores = []
         runtimes = []

@@ -1,10 +1,11 @@
+import re
 
-from .constants import NULL_REPRESENTATIONS, BINARY_VALUES, KEY_REPRESENTATIONS
 import numpy as np
 import pandas as pd
-import re
 from sklearn.feature_extraction.text import TfidfVectorizer
 from valentine import MatcherResults
+
+from .constants import BINARY_VALUES, KEY_REPRESENTATIONS, NULL_REPRESENTATIONS
 
 
 def convert_to_valentine_format(matched_columns, source_table, target_table):
@@ -16,6 +17,7 @@ def convert_to_valentine_format(matched_columns, source_table, target_table):
     if isinstance(valentine_format, MatcherResults):
         return valentine_format
     return MatcherResults(valentine_format)
+
 
 def common_prefix(strings):
     if not strings:
@@ -32,37 +34,41 @@ def common_prefix(strings):
 
     return first[:i]
 
+
 def common_ngrams(strings, threshold=0.3):
     most_common_ngrams = {}
 
     # Loop through n-gram sizes from 3 to 8
     for n in range(3, 9):
         # Create a TfidfVectorizer for n-grams of size 'n'
-        vectorizer = TfidfVectorizer(analyzer='char', ngram_range=(n, n))
-        
+        vectorizer = TfidfVectorizer(analyzer="char", ngram_range=(n, n))
+
         # Fit and transform the list of strings
         tfidf_matrix = vectorizer.fit_transform(strings)
-        
+
         # Sum the tf-idf scores across all documents for each n-gram
         scores = tfidf_matrix.sum(axis=0)
-        
+
         # Get feature names (n-grams) and their corresponding scores
-        ngram_scores = [(ngram, scores[0, idx]) for ngram, idx in vectorizer.vocabulary_.items()]
-        
+        ngram_scores = [
+            (ngram, scores[0, idx]) for ngram, idx in vectorizer.vocabulary_.items()
+        ]
+
         # Filter n-grams by threshold score
         filtered_ngrams = [ngram for ngram in ngram_scores if ngram[1] > threshold]
-        
+
         # Sort n-grams by score in descending order
-        most_common_ngrams[n] = sorted(filtered_ngrams, key=lambda x: x[1], reverse=True)
-    
+        most_common_ngrams[n] = sorted(
+            filtered_ngrams, key=lambda x: x[1], reverse=True
+        )
+
     # Return the filtered and sorted n-grams
     return most_common_ngrams
 
 
-
 def preprocess_string(s):
     # Remove non-alphanumeric characters and convert to lowercase
-    return re.sub(r'[^a-zA-Z0-9]', '', s).lower()
+    return re.sub(r"[^a-zA-Z0-9]", "", s).lower()
 
 
 def alignment_score(str1, str2):
@@ -92,12 +98,6 @@ def alignment_score(str1, str2):
     return score
 
 
-
-
-
-
-
-
 def is_null_value(value):
     if isinstance(value, str):
         value = value.lower()
@@ -112,14 +112,14 @@ def is_binary_value(value):
 
 def remove_invalid_characters(input_string):
     # Remove any character that is not a letter, digit, or whitespace
-    pattern = r'[^a-zA-Z0-9\s]'
-    cleaned_string = re.sub(pattern, ' ', input_string)
+    pattern = r"[^a-zA-Z0-9\s]"
+    cleaned_string = re.sub(pattern, " ", input_string)
     return cleaned_string
 
 
 def split_camel_case(input_string):
     # Split camel case by adding a space before any uppercase letter that is followed by a lowercase letter
-    split_string = re.sub(r'(?<=[a-z])(?=[A-Z])', ' ', input_string)
+    split_string = re.sub(r"(?<=[a-z])(?=[A-Z])", " ", input_string)
     return split_string
 
 
@@ -130,19 +130,18 @@ def clean_column_name(col_name):
     col_name = col_name.lower()
     col_name = remove_invalid_characters(col_name)
     # Reduce multiple spaces to a single space
-    col_name = re.sub(r'\s+', ' ', col_name)
+    col_name = re.sub(r"\s+", " ", col_name)
     return col_name
 
 
 def clean_df(df):
-
     def clean_element(x):
         if is_null_value(x):
             return None
         if isinstance(x, str):
             val = split_camel_case(x)
             val = remove_invalid_characters(val.strip().lower())
-            
+
             if val != "":
                 return val
             else:
@@ -155,7 +154,6 @@ def clean_df(df):
 
 
 def detect_column_type(col, key_threshold=0.8, numeric_threshold=0.90):
-
     if "gene" in col.name.lower():
         # TODO, implement a less naive approach
         return "gene"
@@ -163,28 +161,30 @@ def detect_column_type(col, key_threshold=0.8, numeric_threshold=0.90):
     if "date" in col.name.lower():
         # TODO, implement a less naive approach
         return "date"
-    
-    
 
     unique_values = col.dropna().unique()
-    if len(unique_values)/len(col) > key_threshold and col.dtype not in [np.float64, np.float32, np.float16]:
+    if len(unique_values) / len(col) > key_threshold and col.dtype not in [
+        np.float64,
+        np.float32,
+        np.float16,
+    ]:
         # columns with many distinct values are considered as "keys"
         return "key"
-    
 
     if len(unique_values) == 0:
         return "Unknown"
 
-    
     col_name = col.name.lower()
-    if any(col_name.startswith(rep) or col_name.endswith(rep) for rep in KEY_REPRESENTATIONS):
+    if any(
+        col_name.startswith(rep) or col_name.endswith(rep)
+        for rep in KEY_REPRESENTATIONS
+    ):
         return "key"
 
-    if col.dtype in [np.float64, np.int64] :
+    if col.dtype in [np.float64, np.int64]:
         return "numerical"
 
-    numeric_unique_values = pd.Series(
-        pd.to_numeric(unique_values, errors='coerce'))
+    numeric_unique_values = pd.Series(pd.to_numeric(unique_values, errors="coerce"))
     numeric_unique_values = numeric_unique_values.dropna()
 
     if not numeric_unique_values.empty:
@@ -223,6 +223,7 @@ def get_type2columns_map(df):
 
     return types2columns_map
 
+
 # def get_samples(values, n=15, random=True):
 #     unique_values = values.dropna()#.unique()
 #     if random:
@@ -234,6 +235,7 @@ def get_type2columns_map(df):
 #         most_frequent_values = value_counts.head(n)
 #         tokens = most_frequent_values.index.tolist()
 #     return [str(token) for token in tokens]
+
 
 def get_samples(values, n=10, random=True):
     unique_values = values.dropna().unique()
@@ -247,20 +249,19 @@ def get_samples(values, n=10, random=True):
         # Select n/2 most frequent values and n/2 evenly spaced unique values
         value_counts = values.dropna().value_counts()
         most_frequent_values = value_counts.head(n // 2).index.tolist()
-        
+
         # For diversity, choose `n - len(most_frequent_values)` evenly spaced values
         spacing_interval = max(1, total_unique // (n - len(most_frequent_values)))
-        diverse_values = unique_values[::spacing_interval][:n - len(most_frequent_values)]
-        
+        diverse_values = unique_values[::spacing_interval][
+            : n - len(most_frequent_values)
+        ]
+
         # Combine the frequent and diverse samples, remove duplicates, and sort them
         tokens = sorted(set(most_frequent_values + list(diverse_values)))
-        
+
     else:
         # Deterministic approach: only take `n` most frequent values, sorted
         value_counts = values.dropna().value_counts()
         tokens = sorted(value_counts.head(n).index.tolist())
 
     return [str(token) for token in tokens]
-
-
-

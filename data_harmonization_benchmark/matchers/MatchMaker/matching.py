@@ -1,12 +1,13 @@
 import logging
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, Tuple, Union
 
 import pandas as pd
-from valentine import valentine_match
-
 from match_maker.match_maker import MatchMaker
+from valentine import valentine_match
+from valentine.algorithms.matcher_results import MatcherResults
 
 logger = logging.getLogger(__name__)
+
 
 def matching(
     usecase: str,
@@ -15,14 +16,8 @@ def matching(
     target: pd.DataFrame,
     top_k: int = 20,
     use_gpu: bool = False,
-    config: Optional[Dict[str, Any]] = dict(
-        use_instances = True,
-        use_gpt = False
-    ),
-):
-    
-
-
+    config: Optional[Dict[str, Any]] = dict(use_instances=True, use_gpt=False),
+) -> Union[MatcherResults, Dict[Tuple[Tuple[str, str], Tuple[str, str]], float]]:
     matcher = MatchMaker(topk=top_k, **config)
     matches = valentine_match(source, target, matcher)
 

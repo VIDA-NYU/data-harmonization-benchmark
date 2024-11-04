@@ -1,8 +1,7 @@
-
 import torch
 
+
 def compute_cosine_similarity_simple(embeddings_df1, embeddings_df2, k):
-    
     embeddings_df1 = torch.nn.functional.normalize(embeddings_df1, p=2, dim=1)
     embeddings_df2 = torch.nn.functional.normalize(embeddings_df2, p=2, dim=1)
 
@@ -16,7 +15,10 @@ def compute_cosine_similarity_simple(embeddings_df1, embeddings_df2, k):
 
     return topk_similarity, topk_indices
 
-def compute_cosine_similarity(embeddings_input: torch.Tensor, embeddings_target: torch.Tensor, top_k: int):
+
+def compute_cosine_similarity(
+    embeddings_input: torch.Tensor, embeddings_target: torch.Tensor, top_k: int
+):
     """
     Compute the top K cosine similarities between input and target embeddings.
 
@@ -38,19 +40,21 @@ def compute_cosine_similarity(embeddings_input: torch.Tensor, embeddings_target:
     target_norm = torch.norm(embeddings_target, dim=1, keepdim=True)
 
     # Compute cosine similarity
-    similarities = torch.mm(embeddings_input, embeddings_target.T) / (input_norm * target_norm.T)
+    similarities = torch.mm(embeddings_input, embeddings_target.T) / (
+        input_norm * target_norm.T
+    )
 
     # Remove self-similarities
-    
+
     min_top_k = min(top_k, similarities.shape[1])
 
-    
-
     # Get top K scores and indices
-    top_k_scores, top_k_indices = torch.topk(similarities, min_top_k, dim=1, largest=True, sorted=True)
-    
+    top_k_scores, top_k_indices = torch.topk(
+        similarities, min_top_k, dim=1, largest=True, sorted=True
+    )
+
     # Convert to numpy arrays for easier handling
     top_k_scores = top_k_scores.cpu().numpy()
     top_k_indices = top_k_indices.cpu().numpy()
-    
+
     return top_k_scores, top_k_indices, similarities

@@ -1,8 +1,9 @@
 import logging
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, Tuple, Union
 
 import pandas as pd
 from ISResMat import TrainApp
+from valentine.algorithms.matcher_results import MatcherResults
 
 logger = logging.getLogger(__name__)
 
@@ -22,7 +23,7 @@ def matching(
         learning_rate=3e-5,
         # model_checkpoint="matchers/Unicorn/checkpoint/checkpoint.pt",
     ),
-):
+) -> Union[MatcherResults, Dict[Tuple[Tuple[str, str], Tuple[str, str]], float]]:
     data_dir = usecase_path
     data_name = usecase
     src_orig_file = source
