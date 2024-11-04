@@ -1,4 +1,3 @@
-
 import logging
 from typing import Any, Dict, Optional
 
@@ -17,15 +16,14 @@ def matching(
     top_k: int = 20,
     use_gpu: bool = False,
     config: Optional[Dict[str, Any]] = dict(
-
+        use_instances = True,
+        use_gpt = False
     ),
 ):
     
 
 
-    matcher = MatchMaker()
-    matches = matcher.match(source, target, top_k=top_k)
+    matcher = MatchMaker(topk=top_k, **config)
+    matches = valentine_match(source, target, matcher)
 
     return matches
-
-
