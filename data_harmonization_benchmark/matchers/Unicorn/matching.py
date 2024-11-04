@@ -1,3 +1,4 @@
+import os
 import logging
 from typing import Any, Dict, Optional
 
@@ -6,6 +7,7 @@ from unicorn_zero import TrainApp
 
 logger = logging.getLogger(__name__)
 
+ABS_PATH = os.path.dirname(os.path.abspath(__file__))
 
 def matching(
     usecase: str,
@@ -19,7 +21,7 @@ def matching(
         load=True,  # Set this to True for pre-trained model, False for zero-shot !!!
         model="deberta_base",
         modelname="Temp",
-        ckpt_path="matchers/Unicorn/checkpoint",
+        ckpt_path=os.path.join(ABS_PATH, "checkpoint"),
         ckpt="UnicornPlus",
         valentine_output=True,
     ),

@@ -12,7 +12,8 @@ from config import Config
 from utils.mrr import compute_mean_ranking_reciprocal
 
 logger = logging.getLogger(__name__)
-MATCHERS_PATH = "./matchers"
+ABS_PATH = os.path.dirname(os.path.abspath(__file__))
+MATCHERS_PATH = os.path.join(ABS_PATH, "matchers")
 OUTPUT_PATH = "./tmp"
 
 

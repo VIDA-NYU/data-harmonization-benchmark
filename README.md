@@ -11,4 +11,4 @@ This repository contains the code and data for the Data Harmonization Benchmark.
 #### 1.1.4 Jaccard Distance Matcher
 #### 1.1.5 Similarity Flooding Matcher
 #### 1.1.6 Unicorn Matcher
-#### 1.1.7 IsResMat Matcher
+#### 1.1.7 ISResMat Matcher

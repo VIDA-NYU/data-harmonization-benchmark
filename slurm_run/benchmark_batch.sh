@@ -1,8 +1,8 @@
 #!/bin/bash
 
-usecases="GDC"
-# usecases="ChEMBL MagellanHumanCurated OpenData TPC-DI WikidataHumanCurated"
-matchers="Coma"
+usecases="MagellanHumanCurated"
+# usecases="ChEMBL MagellanHumanCurated OpenData TPC-DI WikidataHumanCurated GDC ISResMat"
+matchers="Unicorn"
 n_runs=3
 top_k=20
 use_gpu=true
