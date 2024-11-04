@@ -25,6 +25,8 @@ venv/
 ENV/
 env.bak/
 venv.bak/
+penv*
+**/penv*
 
 htmlcov/
 .tox/
@@ -56,3 +58,6 @@ checkpoint/
 
 *.ext3
 *.pt
+
+*.csv
+**/*.csv

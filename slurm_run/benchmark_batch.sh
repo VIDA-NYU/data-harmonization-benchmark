@@ -1,9 +1,8 @@
 #!/bin/bash
 
-usecases="ChEMBL MagellanHumanCurated OpenData TPC-DI WikidataHumanCurated"
-# usecases="amazon_google_exp beeradvo_ratebeer fodors_zagats itunes_amazon walmart_amazon dblp_acm dblp_scholar Musicians_joinable Musicians_semjoinable Musicians_unionable Musicians_viewunion"
-# matchers="coma similarity_flooding cupid distribution_based jaccard_distance two_phase"
-matchers="Unicorn"
+usecases="GDC"
+# usecases="ChEMBL MagellanHumanCurated OpenData TPC-DI WikidataHumanCurated"
+matchers="Coma"
 n_runs=3
 top_k=20
 use_gpu=true
