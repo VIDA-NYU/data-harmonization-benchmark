@@ -1,0 +1,7 @@
+dotenv
+fuzzywuzzy
+openai
+scipy
+sentence_transformers
+transformers
+torch
