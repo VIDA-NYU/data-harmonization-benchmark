@@ -20,14 +20,17 @@ class Config:
         ground_truths: list[Union[str, pd.DataFrame]],  # "source" | "target"
         scorer: str = "accuracy",
         n_jobs: int = 1,
-        top_k: int = 10,
+        top_k: int = 20,
         use_gpu: bool = False,
     ):
         self.subtasks = subtasks
         self.sources = iter(sources)
 
-        if targets[0] in ["gdc"]:
-            self.targets = pd.read_csv(GDC_DATA_PATH)
+        if isinstance(targets, str):
+            if targets in ["gdc"]:
+                self.targets = pd.read_csv(GDC_DATA_PATH)
+            else:
+                raise ValueError(f"Invalid target {targets}")
         else:
             self.targets = iter(targets)
 

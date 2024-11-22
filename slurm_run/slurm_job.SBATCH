@@ -8,13 +8,9 @@
 
 module purge;
 module load anaconda3/2020.07;
-export OMP_NUM_THREADS=$SLURM_CPUS_PER_TASK;
 source /share/apps/anaconda3/2020.07/etc/profile.d/conda.sh;
-conda create -p ./penv_${1} python=3.9;
-conda activate ./penv_${1};
-export PATH=./penv_${1}/bin:$PATH;
+conda activate ./penv_${1}_cpu;
+export OMP_NUM_THREADS=$SLURM_CPUS_PER_TASK;
+export PATH=./penv_${1}_cpu/bin:$PATH;
 
-
-pip install -r ../requirements.txt
-pip install -r ../data_harmonization_benchmark/matchers/${1}/requirements.txt
 python3 ../data_harmonization_benchmark/runbenchmark.py -m ${1} -c ../data_harmonization_benchmark/datasets/${2} -n ${3} -k ${4}

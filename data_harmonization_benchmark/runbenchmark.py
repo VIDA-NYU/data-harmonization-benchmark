@@ -58,10 +58,11 @@ def main():
             and os.path.exists(os.path.join(path, "target.csv"))
             and os.path.exists(os.path.join(path, "groundtruth.csv"))
         ):
-            sources.append(os.path.join(path, "source.csv"))
-            targets.append(os.path.join(path, "target.csv"))
-            ground_truths.append(os.path.join(path, "groundtruth.csv"))
-            subtasks.append(path)
+            if path not in subtasks:
+                sources.append(os.path.join(path, "source.csv"))
+                targets.append(os.path.join(path, "target.csv"))
+                ground_truths.append(os.path.join(path, "groundtruth.csv"))
+                subtasks.append(path)
         for root, dirs, _ in os.walk(path):
             for dir in dirs:
                 abs_path = os.path.join(root, dir)
