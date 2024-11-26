@@ -1,6 +1,8 @@
 import logging
 import os
 import time
+import random
+from datetime import datetime
 from typing import Optional, Union
 
 import pandas as pd
@@ -22,15 +24,13 @@ class Config:
         n_jobs: int = 1,
         top_k: int = 20,
         use_gpu: bool = False,
+        target_sample: Optional[int] = None
     ):
         self.subtasks = subtasks
         self.sources = iter(sources)
 
-        if isinstance(targets, str):
-            if targets in ["gdc"]:
-                self.targets = pd.read_csv(GDC_DATA_PATH)
-            else:
-                raise ValueError(f"Invalid target {targets}")
+        if targets and targets[0] in ["gdc"]:
+            self.targets = pd.read_csv(GDC_DATA_PATH)
         else:
             self.targets = iter(targets)
 
@@ -41,24 +41,39 @@ class Config:
         self.usecase_path = usecase
         self.top_k = top_k
         self.use_gpu = use_gpu
+        self.target_sample = target_sample
 
     def get_source(self) -> Optional[pd.DataFrame]:
         source = next(self.sources)
         if isinstance(source, pd.DataFrame):
+            source = source.rename(columns=lambda x: x.strip())
             return source
         if os.path.exists(source):
-            return pd.read_csv(source)
+            source = pd.read_csv(source)
+            source = source.rename(columns=lambda x: x.strip())
+            return source
         return None
 
     def get_target(self) -> Optional[pd.DataFrame]:
+        target = None
         if isinstance(self.targets, pd.DataFrame):
-            return self.targets
-        target = next(self.targets)
-        if isinstance(target, pd.DataFrame):
-            return target
-        if os.path.exists(target):
-            return pd.read_csv(target)
-        return None
+            target = self.targets.rename(columns=lambda x: x.strip())
+        elif hasattr(self.targets, '__iter__'):
+            target = next(self.targets)
+            if isinstance(target, pd.DataFrame):
+                target = target.rename(columns=lambda x: x.strip())
+            elif os.path.exists(target):
+                target = pd.read_csv(target)
+                target = target.rename(columns=lambda x: x.strip())
+        else:
+            return None
+        
+        if self.target_sample is not None:
+            timestamp = int(round(datetime.now().timestamp()))
+            random.seed(timestamp)
+            columns = random.sample(list(target.columns), self.target_sample)
+            return target[columns]
+        return target
 
     def get_ground_truth(self) -> Optional[pd.DataFrame]:
         ground_truth = next(self.ground_truths)

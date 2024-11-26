@@ -33,6 +33,7 @@ def main():
         default=10,
     )
     parser.add_argument("-G", "--use-gpu", action="store_true")
+    parser.add_argument("--target-sample", type=int, help="[For experiments] Get a random sample from target")
 
     args = parser.parse_args()
 
@@ -46,6 +47,7 @@ def main():
     logger.info("Number of runs: %d", args.n_jobs)
     logger.info("Top k candidates: %d", args.top_k)
     logger.info("Use GPU: %d", args.use_gpu)
+    logger.info("Target sample: %d", args.target_sample)
 
     sources = []
     targets = []
@@ -85,12 +87,17 @@ def main():
         n_jobs=args.n_jobs,
         top_k=args.top_k,
         use_gpu=args.use_gpu,
+        target_sample=args.target_sample,
     )
 
     for subtask_name, all_metrics, runtime in matching(config, args.matcher):
+        if args.target_sample is not None:
+            subtask_name_parsed = f"{subtask_name.split('/')[-1]}_{args.target_sample}"
+        else:
+            subtask_name_parsed = f"{subtask_name.split('/')[-1]}"
         parse_results(
             args.usecase,
-            subtask_name,
+            subtask_name_parsed,
             args.matcher,
             args.top_k,
             runtime,
