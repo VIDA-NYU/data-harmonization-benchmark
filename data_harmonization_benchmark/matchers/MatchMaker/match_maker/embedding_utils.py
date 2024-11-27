@@ -2,6 +2,7 @@ import torch
 
 
 def compute_cosine_similarity_simple(embeddings_df1, embeddings_df2, k):
+
     embeddings_df1 = torch.nn.functional.normalize(embeddings_df1, p=2, dim=1)
     embeddings_df2 = torch.nn.functional.normalize(embeddings_df2, p=2, dim=1)
 

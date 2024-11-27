@@ -16,7 +16,10 @@ def matching(
     target: pd.DataFrame,
     top_k: int = 20,
     use_gpu: bool = False,
-    config: Optional[Dict[str, Any]] = dict(use_instances=True, use_gpt=False),
+    config: Optional[Dict[str, Any]] = dict(
+        use_bp_reranker=True,
+        use_gpt_reranker=False
+        ),
 ) -> Union[MatcherResults, Dict[Tuple[Tuple[str, str], Tuple[str, str]], float]]:
     matcher = MatchMaker(topk=top_k, **config)
     matches = valentine_match(source, target, matcher)

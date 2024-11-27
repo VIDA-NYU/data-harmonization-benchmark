@@ -66,7 +66,6 @@ KEY_REPRESENTATIONS = [
     "record_id",  # General identifier for records in a dataset
 ]
 
-
 BINARY_VALUES = {
     "yes",
     "no",

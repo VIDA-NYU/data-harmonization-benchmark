@@ -1,27 +1,25 @@
-# from config import API_KEY, OLLAMA_HOST
-import os
-import re
-
-import ollama
-import tiktoken
-from dotenv import load_dotenv
 from openai import OpenAI
+import tiktoken
+import re
+import os
+import time
 
 
-class ColumnMatcher:
+class LLMReranker:
     def __init__(self, llm_model="gpt-4o-mini"):
         self.llm_model = llm_model
         self.client = self._load_client()
+        self.llm_attempts = 5
 
     # TODO: Add any additional models here
     def _load_client(self):
         if self.llm_model in ["gpt-4-turbo-preview", "gpt-4o-mini"]:
-            print("Loading OpenAI client")
-            load_dotenv(os.path.expanduser("~/config.env"))
-            return OpenAI(api_key=os.getenv("API_KEY"))
-        # elif self.llm_model in ["gemma2:9b"]:
-        #     print("Loading OLLAMA client")
-        #     return ollama.Client(host=OLLAMA_HOST)
+            api_key = os.getenv("OPENAI_API_KEY")
+
+            if not api_key:
+                raise ValueError("API key not found in environment variables.")
+
+            return OpenAI(api_key=api_key)
 
     def num_tokens_from_string(self, string, encoding_name="gpt-4o-mini"):
         encoding = tiktoken.encoding_for_model(encoding_name)
@@ -34,13 +32,14 @@ class ColumnMatcher:
         target_table,
         source_values,
         target_values,
-        top_k,
         matched_columns,
-        cand_k,
         score_based=True,
     ):
         refined_matches = {}
+        column_count = 0
         for source_col, target_col_scores in matched_columns.items():
+            # print(f"Refining matches for {source_col}", column_count, "out of", len(matched_columns))
+            # column_count += 1
             cand = (
                 "Column: "
                 + source_col
@@ -61,22 +60,40 @@ class ColumnMatcher:
                 [col for col in source_table.columns if col != source_col]
             )
             if score_based:
+                attempts = 0
                 while True:
+
+                    if attempts >= self.llm_attempts:
+                        print(
+                            f"Failed to parse response after {self.llm_attempts} attempts. Skipping."
+                        )
+                        refined_match = []
+                        for target_col, score in target_col_scores:
+                            refined_match.append((target_col, score))
+                        break
+
                     refined_match = self._get_matches_w_score(cand, targets, other_cols)
                     refined_match = self._parse_scored_matches(refined_match)
+                    attempts += 1
+                    
                     if refined_match is not None:
                         break
+                    
+
+
             else:
-                refined_match = self._get_matches(cand, targets, top_k)
+                refined_match = self._get_matches(cand, targets)
                 refined_match = refined_match.split("; ")
+
+            # print(f"Refined matches for {source_col}: {refined_match}")
             refined_matches[source_col] = refined_match
         return refined_matches
 
     def _get_prompt(self, cand, targets):
         prompt = (
-            "From a score of 0.00 to 1.00, please judge the similarity of the candidate column from the candidate table to each target schema in the target table. \
+            "From a score of 0.00 to 1.00, please judge the similarity of the candidate column from the candidate table to each target column in the target table. \
 All the columns are defined by the column name and a sample of its respective values if available. \
-Provide only the name of each target schema followed by its similarity score in parentheses, formatted to two decimals, and separated by a semicolon. \
+Provide only the name of each target column followed by its similarity score in parentheses, formatted to two decimals, and separated by a semicolon. \
 Rank the schema-score pairs by score in descending order. Ensure your response excludes additional information and quotations.\n \
 Example:\n \
 Candidate Column: \
@@ -85,7 +102,7 @@ Target Schemas: \
 Column: WorkerID, Sample values: [100, 101, 102] \
 Column: EmpCode, Sample values: [001, 002, 003] \
 Column: StaffName, Sample values: ['Alice', 'Bob', 'Charlie']\n \
-Response: WorkerID(0.95); EmpCode(0.30); StaffNumber(0.05)\n\n \
+Response: WorkerID(0.95); EmpCode(0.30); StaffName(0.05)\n\n \
 Candidate Column:"
             + cand
             + "\n\nTarget Schemas:\n"
@@ -109,7 +126,7 @@ Candidate Column:"
             messages = [
                 {
                     "role": "system",
-                    "content": "You are an AI trained to perform schema matching by providing similarity scores.",
+                    "content": "You are an AI trained to perform schema matching by providing column similarity scores.",
                 },
                 {
                     "role": "user",
@@ -117,12 +134,18 @@ Candidate Column:"
                 },
             ]
             # print(messages[1]["content"])
+
+            # time_begin = time.time()
+
             response = self.client.chat.completions.create(
                 model=self.llm_model,
                 messages=messages,
                 temperature=0.3,
             )
             matches = response.choices[0].message.content
+
+            # time_end = time.time()
+            # print("Time taken for completion:", time_end - time_begin)
 
         elif self.llm_model in ["gemma2:9b"]:
             response = self.client.chat(
@@ -152,7 +175,8 @@ Candidate Column:"
             try:
                 score = float(score_part[:-1])
             except ValueError:
-                score_part = score_part[:-1].rstrip(")")  # Remove all trailing ')'
+                # Remove all trailing ')'
+                score_part = score_part[:-1].rstrip(")")
                 try:
                     score = float(score_part)
                 except ValueError:
@@ -170,24 +194,3 @@ Candidate Column:"
             matched_columns.append((schema_name, score))
 
         return matched_columns
-
-    # def _get_matches(self, cand, targets, k, model="gpt-4-turbo-preview"):
-    #         messages = [
-    #             {"role": "system", "content": "You are an assistant for schema matching.",},
-    #             {
-    #                 "role": "user",
-    #                 "content": """ Please select the top """
-    #                 + str(k)
-    #                 + """ schemas from """
-    #                 + targets
-    #                 + """ which best matches the candidate column, which is defined by the column name followed by its respective values. Please respond only with the name of the classes separated by semicolon.
-    #                     \n CONTEXT: """
-    #                 + cand
-    #                 + """ \n RESPONSE: \n""",
-    #             },
-    #         ]
-    #         col_type = self.client.chat.completions.create(
-    #             model=model, messages=messages, temperature=0.3,
-    #         )
-    #         col_type_content = col_type.choices[0].message.content
-    #         return col_type_content
