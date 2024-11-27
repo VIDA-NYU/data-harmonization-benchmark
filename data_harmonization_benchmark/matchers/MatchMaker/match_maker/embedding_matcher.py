@@ -52,8 +52,7 @@ class EmbeddingMatcher:
                 self.model.to(self.device)
             else:
                 print(
-                    f"Trained model not found at {
-                        model_path}, loading default model."
+                    f"Trained model not found at {model_path}, loading default model."
                 )
 
     def _get_embeddings(self, texts, batch_size=32):
