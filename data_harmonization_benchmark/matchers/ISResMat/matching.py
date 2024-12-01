@@ -21,6 +21,7 @@ def matching(
         frag_height=6,
         frag_width=12,
         learning_rate=3e-5,
+        col_name_prob=0.5,
         # model_checkpoint="matchers/Unicorn/checkpoint/checkpoint.pt",
     ),
 ) -> Union[MatcherResults, Dict[Tuple[Tuple[str, str], Tuple[str, str]], float]]:
@@ -31,7 +32,6 @@ def matching(
     golden_mappings = f"{data_dir}/groundtruth.csv"
 
     isresmat = TrainApp(
-        col_name_prob=0,
         store_matches=0,
         comment="inst_001",
         dataset_name=data_name,

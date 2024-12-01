@@ -15,6 +15,10 @@ def matching(
     use_gpu: bool = False,
     config: Optional[Dict[str, Any]] = dict(),
 ) -> Union[MatcherResults, Dict[Tuple[Tuple[str, str], Tuple[str, str]], float]]:
+
+    source = source.sample(min(500, source.shape[0]))
+    target = target.sample(min(500, target.shape[0]))
+
     matcher = Coma(use_instances=True, java_xmx="10096m", max_n=top_k, **config)
 
     matches = valentine_match(source, target, matcher)

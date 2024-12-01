@@ -17,9 +17,9 @@ def matching(
     top_k: int = 20,
     use_gpu: bool = False,
     config: Optional[Dict[str, Any]] = dict(
-        use_bp_reranker=True,
-        use_gpt_reranker=False
-        ),
+        use_bp_reranker=False,
+        use_gpt_reranker=True,
+    ),
 ) -> Union[MatcherResults, Dict[Tuple[Tuple[str, str], Tuple[str, str]], float]]:
     matcher = MatchMaker(topk=top_k, **config)
     matches = valentine_match(source, target, matcher)

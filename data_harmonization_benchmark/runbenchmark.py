@@ -97,6 +97,7 @@ def main():
             subtask_name_parsed = f"{subtask_name.split('/')[-1]}"
         parse_results(
             args.usecase,
+            # "/".join(args.usecase.split("/")[:-1]),
             subtask_name_parsed,
             args.matcher,
             args.top_k,

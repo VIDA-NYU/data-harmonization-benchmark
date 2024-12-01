@@ -17,6 +17,9 @@ def matching(
 ) -> Union[MatcherResults, Dict[Tuple[Tuple[str, str], Tuple[str, str]], float]]:
     matcher = JaccardDistanceMatcher(**config)
 
+    source = source.sample(min(500, source.shape[0]))
+    target = target.sample(min(500, target.shape[0]))
+
     matches = valentine_match(source, target, matcher)
 
     return matches
