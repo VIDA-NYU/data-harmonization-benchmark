@@ -3,7 +3,7 @@
 # usecases="OpenData/Joinable OpenData/Semantically-Joinable OpenData/Unionable OpenData/View-Unionable TPC-DI/Joinable TPC-DI/Semantically-Joinable TPC-DI/Unionable TPC-DI/View-Unionable"
 usecases="GDC_new"
 # usecases="ChEMBL MagellanHumanCurated OpenData TPC-DI WikidataHumanCurated GDC_synthetic GDC_concat_columns GDC_new"
-# matchers="Coma ComaInst DistributionBased JaccardDistanceMatcher SimilarityFlooding ISResMat Unicorn MatchMaker"
+# matchers="Coma ComaInst DistributionBased JaccardDistanceMatcher SimilarityFlooding ISResMat Unicorn Magneto"
 matchers="ISResMat Unicorn"
 n_runs=1
 top_k=20
@@ -15,9 +15,9 @@ output="results_gdc_new_isresmat_unicorn_cpu.csv"
 for matcher in $matchers
 do
     if [[ $use_gpu = true ]]; then
-        sh ./penv_setup.sh $matcher gpu
+        sh ./setup_penv.sh $matcher gpu
     else
-        sh ./penv_setup.sh $matcher cpu
+        sh ./setup_penv.sh $matcher cpu
     fi
     
     for usecase in $usecases

@@ -5,7 +5,7 @@ usecase="GDC_new/gillete"
 # usecase="MagellanHumanCurated/itunes_amazon"
 
 # matchers="Coma ComaInst JaccardDistanceMatcher DistributionBased SimilarityFlooding"
-matchers="MatchMaker"
+matchers="Magneto"
 
 samples="50 100 200 300 400 500 600 700 736"
 # samples="5 10 15 20 25 30 35 40 43"
@@ -21,9 +21,9 @@ rm -rf tmp/logs/*_sample.out
 for matcher in $matchers
 do
     if [[ $use_gpu = true ]]; then
-        sh ./penv_setup.sh $matcher gpu
+        sh ./setup_penv.sh $matcher gpu
     else
-        sh ./penv_setup.sh $matcher cpu
+        sh ./setup_penv.sh $matcher cpu
     fi
     
     for sample in $samples
