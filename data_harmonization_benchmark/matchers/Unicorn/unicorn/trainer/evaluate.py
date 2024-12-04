@@ -42,9 +42,18 @@ def predict_moe(
             match_scores.extend([scores[1] for scores in pred_cls])
             print("labels:", labels)
 
-    for idx, row in enumerate(ground_truth.itertuples()):
-        source_colname = row.source
+    # for idx, row in enumerate(ground_truth.itertuples()):
+    #     source_colname = row.source
 
+    #     for target_colname in target.columns:
+    #         matches[
+    #             (
+    #                 ("source", source_colname),
+    #                 ("target", target_colname),
+    #             )
+    #         ] = match_scores.pop(0)
+
+    for source_colname in source.columns:
         for target_colname in target.columns:
             matches[
                 (

@@ -37,7 +37,6 @@ class Config:
         self.ground_truths = iter(ground_truths)
 
         self.n_jobs = n_jobs
-        self.usecase_name = usecase.split("/")[-1]
         self.usecase_path = usecase
         self.top_k = top_k
         self.use_gpu = use_gpu
@@ -106,7 +105,12 @@ class Config:
         return self.n_jobs
 
     def get_usecase_name(self) -> str:
-        return self.usecase_name
+        usecase_pathes = self.usecase_path.split("/")
+        for path in usecase_pathes[::-1]:
+            if "Joinable" in path or "Unionable" in path:
+                continue
+            return path
+        return self.usecase_path
 
     def get_usecase_path(self) -> str:
         return self.usecase_path

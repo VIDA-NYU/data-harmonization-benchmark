@@ -12,5 +12,6 @@ source /share/apps/anaconda3/2020.07/etc/profile.d/conda.sh;
 conda activate ./penv_${1}_cpu;
 export OMP_NUM_THREADS=$SLURM_CPUS_PER_TASK;
 export PATH=./penv_${1}_cpu/bin:$PATH;
+export OPENAI_API_KEY=sk-; # Replace with your OpenAI API key
 
-python3 ../data_harmonization_benchmark/runbenchmark.py -m ${1} -c ../data_harmonization_benchmark/datasets/${2} -n ${3} -k ${4}
+python3 ../data_harmonization_benchmark/runbenchmark.py -m ${1} -c ../data_harmonization_benchmark/datasets/${2} -n ${3} -k ${4} -o ${5}

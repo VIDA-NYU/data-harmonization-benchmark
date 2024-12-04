@@ -30,11 +30,9 @@ def matching(
 ) -> Union[MatcherResults, Dict[Tuple[Tuple[str, str], Tuple[str, str]], float]]:
     data_dir = usecase_path
     data_name = usecase
-    src_orig_file = source
-    tgt_orig_file = target
     golden_mappings = f"{data_dir}/groundtruth.csv"
 
-    unicorn = TrainApp(usecase_path=usecase_path, use_gpu=use_gpu, **config)
+    unicorn = TrainApp(usecase_path=usecase_path, target_df=target, use_gpu=use_gpu, **config)
 
     matches = unicorn.main()
 

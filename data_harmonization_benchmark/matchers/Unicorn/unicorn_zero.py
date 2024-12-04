@@ -68,6 +68,7 @@ class TrainApp:
         usecase_path=None,
         valentine_output=True,
         use_gpu=False,
+        target_df=None,
     ):
         self.pretrain = pretrain
         self.seed = seed
@@ -100,6 +101,7 @@ class TrainApp:
         self.usecase_path = usecase_path
         self.valentine_output = valentine_output
         self.use_gpu = use_gpu
+        self.target_df = target_df
 
     def get_args(self):
         d = AttrDict()
@@ -457,18 +459,27 @@ class TrainApp:
     def parse_dataset(self, data_dir):
         data_name = data_dir
         source = pd.read_csv(os.path.join(data_dir, "source.csv"))
-        target = pd.read_csv(os.path.join(data_dir, "target.csv"))
+        if self.target_df is not None:
+            target = self.target_df
+        else:
+            target = pd.read_csv(os.path.join(data_dir, "target.csv"))
         ground_truth = pd.read_csv(os.path.join(data_dir, "groundtruth.csv"))
         return source, target, ground_truth
 
     def parse_data_dir_gdc(self, data_dir, is_test=False):
         data_name = data_dir
         source = pd.read_csv(os.path.join(data_dir, "source.csv"))
-        target = pd.read_csv(os.path.join(data_dir, "target.csv"))
+        if self.target_df is not None:
+            target = self.target_df
+        else:
+            target = pd.read_csv(os.path.join(data_dir, "target.csv"))
         # gt = pd.read_csv("../../datasets/dou/groundtruth.csv")
         ground_truth = pd.read_csv(os.path.join(data_dir, "groundtruth.csv"))
-        dataset_json = self.convert_dataset_to_unicorn_tokens(
-            source, target, ground_truth, is_test
+        # dataset_json = self.convert_dataset_to_unicorn_tokens(
+        #     source, target, ground_truth, is_test
+        # )
+        dataset_json = self.convert_full_dataset_to_unicorn_tokens(
+            source, target, ground_truth
         )
 
         if not is_test:
@@ -501,4 +512,20 @@ class TrainApp:
                     target_values = target[target_colname].unique()[:20]
                     target_str = f"[ATT] {target_colname} [VAL] {' [VAL] '.join(str(x) for x in list(target_values))}"
                     dataset_json.append([source_str, target_str, is_matching])
+        return dataset_json
+
+    def convert_full_dataset_to_unicorn_tokens(
+        self, source, target, ground_truth, is_test=True
+    ):
+        dataset_json = []
+        for source_colname in source.columns:
+            source_values = source[source_colname].unique()[:20]
+            source_str = f"[ATT] {source_colname} [VAL] {' [VAL] '.join(str(x) for x in list(source_values))}"
+
+            for target_colname in target.columns:
+                target_values = target[target_colname].unique()[:20]
+                target_str = f"[ATT] {target_colname} [VAL] {' [VAL] '.join(str(x) for x in list(target_values))}"
+
+                dataset_json.append([source_str, target_str, 0])
+        
         return dataset_json

@@ -22,7 +22,7 @@ from .llm_reranker import LLMReranker
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
 
-class MatchMaker(BaseMatcher):
+class Magneto(BaseMatcher):
     ## attention
     ## for ablation experiments, make sure to have the default set correcly
     DEFAULT_PARAMS = {
@@ -42,7 +42,7 @@ class MatchMaker(BaseMatcher):
     def __init__(self, **kwargs):
         # Merge provided kwargs with defaults, use params in case you need more parameters: for ablation, etc
         self.params = {**self.DEFAULT_PARAMS, **kwargs}
-        # print("MatchMaker Params:", self.params)
+        # print("Magneto Params:", self.params)
 
     def apply_strsim_matches(self):
         if self.params["include_strsim_matches"]:
